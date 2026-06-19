@@ -28,7 +28,8 @@ router.put(
 
 router.get('/admin_id', auth(USER_ROLE.ADMIN, USER_ROLE.USER), userController.getAdminId);
 router.get('/:userId', auth(USER_ROLE.ADMIN), userController.getUserDetails);
-router.get('/suspend/:id', auth(USER_ROLE.ADMIN), userController.suspendUser);
+router.put('/suspend/:id', auth(USER_ROLE.ADMIN), userController.suspendUser);
+router.put('/block/:id', auth(USER_ROLE.ADMIN), userController.blockUser);
 
 const userRouter = router;
 export default userRouter;
