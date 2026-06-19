@@ -186,6 +186,8 @@ const suspendUser = async (id: string) => {
     throw new AppError('Account not found', StatusCodes.NOT_FOUND);
   }
 
+  //! In future there some more logic will implemented.
+
   // Step 2: Admin cannot be suspended
   if (user.role === 'admin') {
     throw new AppError('Admin account cannot be suspended', StatusCodes.BAD_REQUEST);
@@ -195,6 +197,29 @@ const suspendUser = async (id: string) => {
   const updatedUser = await User.findByIdAndUpdate(
     id,
     { isSuspend: !user.isSuspend },
+    { new: true },
+  );
+
+  return updatedUser;
+};
+
+const blockUser = async (id: string) => {
+  const user = await User.findById(id);
+  if (!user) {
+    throw new AppError('Account not found', StatusCodes.NOT_FOUND);
+  }
+
+  //! In future there some more logic will implemented.
+
+  // Step 2: Admin cannot be suspended
+  if (user.role === 'admin') {
+    throw new AppError('Admin account cannot be suspended', StatusCodes.BAD_REQUEST);
+  }
+
+  // Step 4: Toggle suspension
+  const updatedUser = await User.findByIdAndUpdate(
+    id,
+    { isBlocked: !user.isBlocked },
     { new: true },
   );
 
@@ -211,6 +236,7 @@ const userService = {
   getAdminId,
   getUserDetails,
   suspendUser,
+  blockUser,
 };
 
 export default userService;

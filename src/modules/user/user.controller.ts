@@ -122,6 +122,18 @@ const suspendUser = catchAsync(async (req, res) => {
   });
 });
 
+const blockUser = catchAsync(async (req, res) => {
+  const { id } = req.params;
+  const result = await userService.blockUser(id as string);
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: 'User blocked successfully',
+    data: result,
+  });
+});
+
 const userController = {
   registerUser,
   verifyEmail,
@@ -132,6 +144,7 @@ const userController = {
   updateUserProfile,
   getAdminId,
   suspendUser,
+  blockUser,
 };
 
 export default userController;
