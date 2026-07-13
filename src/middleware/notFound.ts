@@ -12,7 +12,6 @@ const notFound = (req: Request, res: Response, next: NextFunction) => {
       },
     ],
   });
-  next();
 };
 
 export default notFound;

@@ -646,7 +646,7 @@ const getAllProducts = async (query: Record<string, unknown>) => {
   }
 
   const products = await Product.find(filter)
-    .populate('categoryId')
+    .populate({ path: 'categoryId', strictPopulate: false })
     .sort(sort)
     .skip(skip)
     .limit(limitNumber)
@@ -666,7 +666,7 @@ const getAllProducts = async (query: Record<string, unknown>) => {
 };
 
 const getProductDetails = async (id: string) => {
-  const result = await Product.findById(id).populate('categoryId');
+  const result = await Product.findById(id).populate({ path: 'categoryId', strictPopulate: false });
   if (!result) {
     throw new AppError('Product not found', StatusCodes.NOT_FOUND);
   }
