@@ -39,10 +39,38 @@ const getMyWishListItems = catchAsync(async (req, res) => {
   });
 });
 
+const removeCartOrWishlistItem = catchAsync(async (req, res) => {
+  await cartService.removeCartOrWishlistItem(req.user.email, req.params.id as string);
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: 'Item removed successfully',
+    data: null,
+  });
+});
+
+const updateCartQuantity = catchAsync(async (req, res) => {
+  const result = await cartService.updateCartQuantity(
+    req.user.email,
+    req.params.id as string,
+    req.body.action,
+  );
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: 'Cart quantity updated successfully',
+    data: result,
+  });
+});
+
 const cartController = {
   addToCartOrWishlist,
   getMyCartItems,
   getMyWishListItems,
+  removeCartOrWishlistItem,
+  updateCartQuantity,
 };
 
 export default cartController;

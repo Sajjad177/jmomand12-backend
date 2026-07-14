@@ -104,10 +104,84 @@ const getMyWishListItems = async (email: string) => {
   return wishListItems;
 };
 
+const removeCartOrWishlistItem = async (email: string, cartItemId: string) => {
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    throw new AppError('User not found', StatusCodes.NOT_FOUND);
+  }
+
+  const item = await Cart.findOne({
+    _id: cartItemId,
+    userId: user._id,
+  });
+
+  if (!item) {
+    throw new AppError('Item not found', StatusCodes.NOT_FOUND);
+  }
+
+  await Cart.findByIdAndDelete(cartItemId);
+
+  return null;
+};
+
+const updateCartQuantity = async (
+  email: string,
+  cartItemId: string,
+  action: 'increase' | 'decrease',
+) => {
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    throw new AppError('User not found', StatusCodes.NOT_FOUND);
+  }
+
+  const cartItem = await Cart.findOne({
+    _id: cartItemId,
+    userId: user._id,
+    type: 'cart',
+  });
+
+  if (!cartItem) {
+    throw new AppError('Cart item not found', StatusCodes.NOT_FOUND);
+  }
+
+  const product = await Product.findById(cartItem.productId);
+
+  if (!product) {
+    throw new AppError('Product not found', StatusCodes.NOT_FOUND);
+  }
+
+  if (action === 'increase') {
+    if (!product.quantity || cartItem.quantity! >= product.quantity) {
+      throw new AppError(
+        `Only ${product.quantity ?? 0} item(s) available in stock`,
+        StatusCodes.BAD_REQUEST,
+      );
+    }
+
+    cartItem.quantity = (cartItem.quantity || 1) + 1;
+  }
+
+  if (action === 'decrease') {
+    if ((cartItem.quantity || 1) <= 1) {
+      throw new AppError('Quantity cannot be less than 1', StatusCodes.BAD_REQUEST);
+    }
+
+    cartItem.quantity = (cartItem.quantity || 1) - 1;
+  }
+
+  await cartItem.save();
+
+  return cartItem;
+};
+
 const cartService = {
   addToCartOrWishlist,
   getMyCartItems,
   getMyWishListItems,
+  removeCartOrWishlistItem,
+  updateCartQuantity,
 };
 
 export default cartService;
