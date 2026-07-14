@@ -15,6 +15,7 @@ import auctionProductRouter from '../modules/AuctionProduct/AuctionProduct.route
 import bidRouter from '../modules/bid/bid.router';
 import cartRouter from '../modules/cart/cart.router';
 import orderRouter from '../modules/order/order.router';
+import newsletterRouter from '../modules/newsletter/newsletter.router';
 
 const router = Router();
 
@@ -46,6 +47,8 @@ const moduleRoutes = [
   {
     path: '/orders',
     route: orderRouter,
+    path: '/newsletters',
+    route: newsletterRouter,
   },
 ];
 
