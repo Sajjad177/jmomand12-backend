@@ -1059,7 +1059,12 @@ const getAllCategory = async () => {
   const categories = await Product.aggregate([
     {
       $group: {
-        _id: '$category',
+        _id: {
+          $toLower: '$category',
+        },
+        category: {
+          $first: '$category',
+        },
         categoryImage: {
           $first: '$categoryImage',
         },
@@ -1068,7 +1073,20 @@ const getAllCategory = async () => {
     {
       $project: {
         _id: 0,
-        category: '$_id',
+        category: {
+          $concat: [
+            { $toUpper: { $substrCP: ['$category', 0, 1] } },
+            {
+              $substrCP: [
+                { $toLower: '$category' },
+                1,
+                {
+                  $subtract: [{ $strLenCP: '$category' }, 1],
+                },
+              ],
+            },
+          ],
+        },
         categoryImage: 1,
       },
     },
