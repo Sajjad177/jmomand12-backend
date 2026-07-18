@@ -6,6 +6,7 @@ import AuctionProduct from '../AuctionProduct/AuctionProduct.model';
 import Invoice from '../invoice/invoice.model';
 import { PickupAppointment } from '../pickup/pickup.model';
 import Bid from './bid.model';
+import { enqueueOutbidEmailNotification } from '../../queues/outbid-email.producer';
 
 const addBid = async (email: string, payload: any) => {
   // Find user
@@ -64,6 +65,51 @@ const addBid = async (email: string, payload: any) => {
     isWinningBid: true,
   });
 
+  const acceptedAuctionProduct = await AuctionProduct.findOneAndUpdate(
+    {
+      _id: auctionProduct._id,
+      status: 'active',
+      'highestBid.bidder': { $ne: user._id },
+      $or: [
+        {
+          'highestBid.amount': {
+            $gt: 0,
+            $lte: amount - auctionProduct.bidIncrement,
+          },
+        },
+        {
+          $and: [
+            {
+              $or: [
+                { 'highestBid.amount': { $exists: false } },
+                { 'highestBid.amount': { $lte: 0 } },
+              ],
+            },
+            { startingBid: { $lte: amount } },
+          ],
+        },
+      ],
+    },
+    {
+      $set: {
+        highestBid: {
+          bidder: user._id as any,
+          bid: bid._id,
+          amount,
+          placedAt: new Date(),
+        },
+      },
+    },
+  );
+
+  if (!acceptedAuctionProduct) {
+    await Bid.findByIdAndUpdate(bid._id, { isWinningBid: false });
+    throw new AppError(
+      'Minimum bid amount has changed. Please refresh and bid again.',
+      StatusCodes.CONFLICT,
+    );
+  }
+
   // Previous winning bid becomes false
   await Bid.updateMany(
     {
@@ -76,15 +122,18 @@ const addBid = async (email: string, payload: any) => {
     },
   );
 
-  // Update auction product
-  auctionProduct.highestBid = {
-    bidder: user._id as any,
-    bid: bid._id,
-    amount,
-    placedAt: new Date(),
-  };
+  const previousHighestBid = acceptedAuctionProduct.highestBid;
 
-  await auctionProduct.save();
+  void enqueueOutbidEmailNotification({
+    auctionProductId: auctionProduct._id.toString(),
+    productId: auctionProduct.productId.toString(),
+    previousBidderId: previousHighestBid.bidder?.toString(),
+    newBidderId: user._id.toString(),
+    previousBidAmount: previousHighestBid.amount ?? 0,
+    newBidderName: [user.firstName, user.lastName].filter(Boolean).join(' ').trim() || 'Bidder',
+    newBidAmount: amount,
+    bidId: bid._id.toString(),
+  });
 
   return bid;
 };

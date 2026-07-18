@@ -5,6 +5,7 @@ import app from './app';
 import config from './config';
 import { initializeCronJobs } from './cron';
 import logger from './logger';
+import { initializeEmailWorker } from './queues/email.worker';
 import { initNotificationSocket } from './socket/notification.service';
 
 async function main() {
@@ -31,6 +32,12 @@ async function main() {
       initializeCronJobs();
     } else {
       logger.warn('Cron jobs are disabled via configuration');
+    }
+
+    if (config.queue.workersEnabled) {
+      initializeEmailWorker();
+    } else {
+      logger.warn('Queue workers are disabled via configuration');
     }
 
     httpServer.listen(config.port, () => {

@@ -39,6 +39,14 @@ export default {
     frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3000',
   },
 
+  redis: {
+    url: process.env.REDIS_URL || 'redis://127.0.0.1:6379',
+  },
+
+  queue: {
+    workersEnabled: process.env.QUEUE_WORKERS_ENABLED !== 'false',
+  },
+
   security: {
     AES_KEY: process.env.AES_KEY,
     AES_IV: process.env.AES_IV,
